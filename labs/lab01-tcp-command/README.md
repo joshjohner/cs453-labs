@@ -178,8 +178,11 @@ npm run test:watch
 Answer the following questions in your submission:
 
 1. What is the difference between the client and the server?
+ - The server creates the socket and sends it as a request to the server. The server responds to the request.
 2. Why does the server need to keep running after handling one request?
+ - So that it can respond to additional requests. 
 3. What happens if two clients connect at the same time?
+ - 
 4. How is this different from HTTP?
 
 ## Submission
