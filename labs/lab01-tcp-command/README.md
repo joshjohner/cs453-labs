@@ -8,8 +8,8 @@
 *If the command requires an argument, that argument must be seperated from the command by a space*
 
 1. The server accepts TCP client connections on a configurable port. The host and port are configurable in two ways, 
-  a. Change the "config:host" or "config:port" in package.json,
-  b. set it as an environment variable HOST and PORT 
+  - Change the "config:host" or "config:port" in package.json,
+  - Set it as an environment variable HOST and PORT 
 2. The client must send one command at a time.
 
 
