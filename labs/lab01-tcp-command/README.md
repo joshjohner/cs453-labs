@@ -15,6 +15,7 @@
 
 ## Command Protocol
 *Required arguments are denoted by {args}*
+
 ***Basic Commands**
 1. `ECHO {args}` - Returns the argument exactly as it was suplied
 2. `UPPER {args}` - Returns the argument with all characters converted to upper case
