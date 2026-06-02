@@ -31,11 +31,23 @@ describe("handleCommand", () => {
         expect(handleCommand("REVERSE hello")).toBe("olleh");
     });
 
+    test("REVERSE with multiple words reverses the entire argument", () => {
+        expect(handleCommand("REVERSE hello world")).toBe("dlrow olleh");
+    });
+
     test("TIME returns a non-empty response", () => {
         const response = handleCommand("TIME");
 
         expect(typeof response).toBe("string");
         expect(response.length).toBeGreaterThan(0);
+    });
+
+    test("XREVERSE reverses each word in the argument", () => {
+        expect(handleCommand("XREVERSE hello world")).toBe("olleh dlrow");
+    });
+
+    test("INSTRUCTIONS returns the list of available commands", () => {
+        expect(handleCommand("INSTRUCTIONS")).toContain("Available commands:");
     });
 });
 

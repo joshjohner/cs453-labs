@@ -1,67 +1,30 @@
 # Lab 1 - TCP Command Server
 
-In this lab, you will extend a simple TCP echo server into a small command-based TCP server.
 
-The lecture example showed a basic client/server program where the client sends text and the server echoes the same text back. This lab builds on that idea by adding a simple command protocol.
+## Basic Protocol
 
-## Learning Goals
+*** All requests must begin with a command from the *Command Protocol* below.**
+*If the command requires an argument, that argument must be seperated from the command by a space*
 
-By the end of this lab, you should be able to:
-
-* Explain the difference between a TCP client and a TCP server.
-* Run a TCP server and connect to it with a client.
-* Send and receive text over a socket.
-* Implement simple command parsing.
-* Use automated tests to check server command behavior.
-* Describe a small text-based protocol.
-
-## Starter Code Structure
-
-The starter code is located in:
-
-```
-labs/lab01-tcp-command/starter/
-```
-
-The starter project has this structure:
-
-```
-starter/
-├── package.json
-├── src/
-│   ├── client.js
-│   ├── commands.js
-│   └── server.js
-└── test/
-    └── commands.test.js
-```
-
-### File Descriptions
-
-| File                    | Purpose                                                                                     |
-| ----------------------- | ------------------------------------------------------------------------------------------- |
-| `src/server.js`         | Starts the TCP server, accepts client connections, reads client input, and sends responses. |
-| `src/client.js`         | Provides a simple command-line TCP client for testing the server manually.                  |
-| `src/commands.js`       | Contains the command-handling logic. Most of your work will be here.                        |
-| `test/commands.test.js` | Contains automated tests for the command-handling logic.                                    |
-| `package.json`          | Defines project metadata, dependencies, and npm scripts.                                    |
-
-## Required Features
-
-1. The server must accept TCP client connections on a configurable port.
+1. The server accepts TCP client connections on a configurable port. The host and port are configurable in two ways, 
+  1. Change the "config:host" or "config:port" in package.json,
+  2. set it as an environment variable HOST and PORT 
 2. The client must send one command at a time.
-3. The server must support `ECHO`, `UPPER`, `LOWER`, and `QUIT`.
-4. The server must return an error for unknown commands.
-5. The server must not crash when the client sends an empty line.
-6. The README must describe the protocol.
 
-### Graduate Students
-
-7. Implement `REVERSE` or `TIME` or add a new command and document it. 
 
 ## Command Protocol
+*Required arguments are denoted by {args}*
+***Basic Commands**
+1. `ECHO {args}` - Returns the argument exactly as it was suplied
+2. `UPPER {args}` - Returns the argument with all characters converted to upper case
+3. `LOWER {args}` - Returns the argument with all characters converted to lower case
+4. `QUIT` - Closes the client connection.
 
-The server accepts one text command per line.
+***Graduate Commands**   
+5. `REVERSE {args}` - Returns the reverse of a single or multi word string
+6. `XREVERSE {args}` - Returns a multi word string respecting word order, but reversing each word
+7. `TIME` - Returns the current system time
+8. `INFORMATION` - Displays the prompt again
 
 Commands are case-insensitive, but the command arguments should be handled as normal text.
 
@@ -101,103 +64,28 @@ In a second terminal, move into the same starter directory and run the client:
 npm run client
 ```
 
-You should be able to type commands into the client and see responses from the server.
-
-Example:
-
-```
-> ECHO hello
-hello
-
-> UPPER hello
-HELLO
-
-> QUIT
-Goodbye.
-```
-
-## Configuring the Port
-
-The server should use port `3000` by default.
-
-You can run the server on a different port by setting the `PORT` environment variable:
-
-```
-PORT=4000 npm run server
-```
-
-Then run the client using the same port:
-
-```
-PORT=4000 npm run client
-```
-
 ## Testing
-
-This lab includes automated tests for the command-handling logic.
-
 Run the tests from the starter directory:
 
 ```
 npm test
 ```
 
-The tests are focused on `src/commands.js`.
-
-That means you can work on the command behavior without needing to manually start the TCP server every time.
-
-The main function being tested is:
-
-```
-handleCommand(line)
-```
-
-The tests check that commands such as `ECHO`, `UPPER`, `LOWER`, `REVERSE`, `TIME`, and `QUIT` return the expected responses.
-
-Some tests may fail when you first receive the starter code. Your job is to update the implementation until the required tests pass.
-
-You may also run the tests in watch mode if supported by the starter project:
-
-```
-npm run test:watch
-```
-
-## Suggested Workflow
-
-1. Run the server and client before changing anything.
-2. Try the existing commands manually.
-3. Run the automated tests.
-4. Open `src/commands.js`.
-5. Implement one command at a time.
-6. Run `npm test` after each change.
-7. Once the tests pass, test manually with the client.
-8. Update this README to describe the final protocol.
-
 ## Reflection Questions
 
 Answer the following questions in your submission:
 
 1. What is the difference between the client and the server?
+ - The server creates the socket and sends it as a request to the server. The server responds to the request.
 2. Why does the server need to keep running after handling one request?
+ - So that it can respond to additional requests. 
 3. What happens if two clients connect at the same time?
+ - Each client is assigned a different port (socket). The server can respond to one at a time. I created a test where the server loops for 5 seconds when it receives the request before it starts processing.
+ - I sent two requests from two different clients and it serves the first request exactly as you would expect. Then as soon as that request is finished, it serves the second request. As far as connecting at the exact same 
+ - time, it would seem to me that the server is in fact capable of asyncronous handling so two connecting at the same time should not cause an issue. 
 4. How is this different from HTTP?
+ - The concurrent connections doesn't seem to be much different from HTTP, however, HTTP is built on top of TCP, so an HTTP connection must do everything a TCP connection does, plus parse the additional information
+ - (headers, authorization etc.)
+ 
 
-## Submission
 
-Submit your completed lab according to the course submission instructions.
-
-Your submission should include:
-
-* Your updated source code.
-* Your completed `commands.js`.
-* Your updated README protocol description.
-* Your answers to the reflection questions.
-* Any graduate extension work, if applicable.
-
-Before submitting, verify that:
-
-```
-npm test
-```
-
-runs successfully.
