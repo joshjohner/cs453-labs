@@ -2,8 +2,8 @@ import net from "node:net";
 import { handleCommand, shouldCloseConnection } from "./commands.js";
 
 // TCP host and port configuration
-const HOST = process.env.HOST ?? "127.0.0.1";
-const PORT = Number(process.env.PORT ?? 3000);
+const HOST = process.env.HOST ?? process.env.npm_package_config_host ?? "127.0.0.1";
+const PORT = Number(process.env.PORT ?? process.env.npm_package_config_port ??  3000);
 
 // Create TCP server
 const server = net.createServer((socket) => {
@@ -22,7 +22,17 @@ const server = net.createServer((socket) => {
 
   // Handle incoming data from client
   socket.on("data", (data) => {
+    
+    /*
+    console.log("Simulating intense computation...");
+    const end = Date.now() + 5000
+    while (Date.now() < end) {
+      // Busy-wait to simulate intense computation
+    } 
+    console.log("Finished intense computation simulation.");
+    */
 
+    
     // Split incoming data into lines
     const lines = data.split(/\r?\n/).filter((line) => line.length > 0);
 

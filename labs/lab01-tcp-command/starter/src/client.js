@@ -2,8 +2,8 @@ import net from "node:net";
 import readline from "node:readline";
 
 // TCP host and port configuration
-const HOST = process.env.HOST ?? "127.0.0.1";
-const PORT = Number(process.env.PORT ?? 3000);
+const HOST = process.env.HOST ?? process.env.npm_package_config_host ?? "127.0.0.1";
+const PORT = Number(process.env.PORT ?? process.env.npm_package_config_port ?? 3000);
 
 // Create TCP connection to server and handle connection events
 const socket = net.createConnection({ host: HOST, port: PORT }, () => {
