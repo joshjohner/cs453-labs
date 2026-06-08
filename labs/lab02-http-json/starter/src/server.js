@@ -1,8 +1,15 @@
 import http from "node:http";
+import { fileURLToPath, fileURLToPathBuffer } from "node:url";
 
 const DEFAULT_PORT = 3000;
 
-let requestCount = 0;
+const requestCounts = {
+    total: 0, 
+    getHealth: 0,
+    getRequests: 0,
+    postEcho: 0,
+    postCalculate: 0
+};
 
 export function sendJson(res, statusCode, body) {
     res.writeHead(statusCode, {
@@ -53,19 +60,20 @@ export function handleCalculate(body) {
 }
 
 export async function requestHandler(req, res) {
-    requestCount += 1;
+    requestCounts.total ++;
 
     const method = req.method;
     const url = req.url;
 
     if (method === "GET" && url === "/health") {
+        requestCounts.getHealth ++;
         sendJson(res, 200, { status: "ok" });
         return;
     }
 
     if (method === "GET" && url === "/requests") {
-        // TODO: Return the current request count as JSON.
-        sendJson(res, 501, { error: "Request counter not implemented yet" });
+        requestCounts.getRequests ++;
+        sendJson(res, 200, { requests: requestCounts });
         return;
     }
 
@@ -74,6 +82,7 @@ export async function requestHandler(req, res) {
             const body = await readJsonBody(req);
 
             // TODO: Return the parsed JSON body back to the client.
+            requestCounts.postEcho ++;
             sendJson(res, 501, { error: "Echo not implemented yet" });
         } catch {
             sendJson(res, 400, { error: "Invalid JSON" });
@@ -85,6 +94,7 @@ export async function requestHandler(req, res) {
     if (method === "POST" && url === "/calculate") {
         try {
             const body = await readJsonBody(req);
+            requestCounts.postCalculate ++;
             const result = handleCalculate(body);
 
             sendJson(res, result.statusCode, result.response);
@@ -103,10 +113,14 @@ export function createServer() {
 }
 
 export function resetState() {
-    requestCount = 0;
+    for (const key in requestCounts) {
+        requestCounts[key] = 0;
+    }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const fileName = fileURLToPath(import.meta.url);
+
+if (fileName === process.argv[1]) {
     const port = process.env.PORT || DEFAULT_PORT;
     const server = createServer();
 
