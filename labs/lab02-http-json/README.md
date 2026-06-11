@@ -1,40 +1,4 @@
-# Lab 2 - Hello HTTP + JSON
-
-In Lab 1, you worked directly with a TCP socket and created a small command-based server.
-
-In this lab, you will move up one layer and build a small HTTP JSON service. Instead of inventing your own command format, you will use HTTP methods, paths, status codes, headers, and JSON request/response bodies.
-
-## Learning Goals
-
-By the end of this lab, you should be able to:
-
-* Explain the difference between a raw TCP message and an HTTP request.
-* Create a basic HTTP server in Node.js.
-* Read the HTTP method and request path.
-* Parse a JSON request body.
-* Return JSON responses.
-* Use appropriate HTTP status codes.
-* Handle invalid or unexpected client input without crashing the server.
-* Test HTTP request-handling behavior.
-
-## Starter Code Structure
-
-The starter code is located in:
-
-```text
-labs/lab02-http-json/starter/
-```
-
-The starter project has this structure:
-
-```text
-starter/
-├── package.json
-├── src/
-│   └── server.js
-└── test/
-    └── server.test.js
-```
+# Lab 2 - 
 
 ### File Descriptions
 
@@ -44,9 +8,9 @@ starter/
 | `test/server.test.js` | Contains automated tests for the HTTP JSON service.        |
 | `package.json`        | Defines project metadata, dependencies, and npm scripts.   |
 
-## Required Features
+## Features
 
-Your HTTP server must support the following routes.
+The HTTP server supports the following routes.
 
 ### `GET /health`
 
@@ -80,6 +44,8 @@ Example response:
 }
 ```
 
+*Note : The route only accepts string data. Numerical data will return an error.*
+
 ### `POST /calculate`
 
 Accepts a JSON request body with an operation and two numbers.
@@ -102,7 +68,7 @@ Example response:
 }
 ```
 
-Your server must support at least the following operations:
+The server supports the following operations:
 
 | Operation  | Meaning               |
 | ---------- | --------------------- |
@@ -110,8 +76,6 @@ Your server must support at least the following operations:
 | `subtract` | Subtract `b` from `a` |
 | `multiply` | Multiply `a` and `b`  |
 | `divide`   | Divide `a` by `b`     |
-
-The server should return an error response for unsupported operations.
 
 ### `GET /requests`
 
@@ -121,15 +85,21 @@ Example response:
 
 ```json
 {
-  "count": 4
+    "requests": {
+        "total": 9,
+        "getHealth": 1,
+        "getRequests": 4,
+        "postEcho": 1,
+        "postCalculate": 2,
+        "calculationError": 2,
+        "postUppercase": 1
+    }
 }
 ```
 
 ## Error Handling
 
-Your server should not crash when it receives bad input.
-
-At minimum, your server should handle:
+The server will return errors for the following:
 
 * Unknown routes.
 * Unsupported HTTP methods.
@@ -158,61 +128,10 @@ Example error response:
 }
 ```
 
-## Running the Lab
-
-First, move into the starter directory:
-
-```bash
-cd labs/lab02-http-json/starter
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Start the server:
-
-```bash
-npm run server
-```
-
-By default, the server should listen on port `3000`.
-
-You can test the server in a browser by visiting:
-
-```text
-http://localhost:3000/health
-```
-
-You can also test it with `curl`.
-
-Example:
-
-```bash
-curl http://localhost:3000/health
-```
-
-Example `POST /echo` request:
-
-```bash
-curl -X POST http://localhost:3000/echo \
-  -H "Content-Type: application/json" \
-  -d '{"message":"hello"}'
-```
-
-Example `POST /calculate` request:
-
-```bash
-curl -X POST http://localhost:3000/calculate \
-  -H "Content-Type: application/json" \
-  -d '{"operation":"add","a":2,"b":3}'
-```
 
 ## Configuring the Port
 
-The server should use port `3000` by default.
+The server uses port `3000` by default.
 
 You can run the server on a different port by setting the `PORT` environment variable:
 
@@ -253,26 +172,21 @@ You may also run the tests in watch mode if supported by the starter project:
 npm run test:watch
 ```
 
-## Suggested Workflow
-
-1. Run the server before changing anything.
-2. Try `GET /health` manually in a browser or with `curl`.
-3. Run the automated tests.
-4. Open `src/server.js`.
-5. Implement one route at a time.
-6. Run `npm test` after each change.
-7. Test manually with `curl`.
-8. Update this README if your final behavior differs from the examples.
-
 ## Reflection Questions
 
 Answer the following questions in your submission:
 
 1. What is the difference between a TCP message and an HTTP request?
+  - An HTTP message is a TCP message in a specific format (specifically with header and a body)
 2. What does the `Content-Type: application/json` header tell the server?
+  - That the request body is being sent in the form of JSON
 3. Why should a server return different HTTP status codes for different situations?
+  - So that the request client can easily handle errors using a basic switch statement on universally defined error codes
 4. What happens if the client sends invalid JSON?
+  - The server JSON parser fails and returns an error code and a message informing the client of the invalid JSON.
 5. How is this lab different from Lab 1?
+  - In this lab, we are returning more structured data than simple messages. Calling code within the server relies on specifically defined properties to relay information. 
+  - All responses are in JSON format. 
 
 ## Graduate Students
 
@@ -281,30 +195,16 @@ Graduate students should complete one additional feature.
 Choose one of the following:
 
 1. Add a new route, such as `GET /time` or `POST /uppercase`.
+  - See /uppercase
 2. Add one additional calculation operation and document it.
+  - See /calculate { "operation" : "power" }
 3. Improve the request counter so it tracks counts by route.
+  - Additionally added logic to track calculation errors and total requests.
 4. Add additional automated tests for error handling.
+  - Echo with missing message
+  - Echo with invalid message (numerical)
+  - Test /uppercase
+  - Uppercase with missing text
+  - Uppercase with invalid text (numerical)
+  - Updated /requests to include additional fields
 
-Document your graduate extension in your submission.
-
-## Submission
-
-Submit your completed lab according to the course submission instructions.
-
-Your submission should include:
-
-* Your updated source code.
-* Your completed HTTP JSON server.
-* Your updated README if you changed or extended the API.
-* Your answers to the reflection questions.
-* Any graduate extension work, if applicable.
-
-Before submitting, verify that:
-
-```bash
-npm test
-```
-
-runs successfully.
-
-Submit your GitHub link in the Canvas assignment for this lab.
