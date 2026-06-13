@@ -107,6 +107,38 @@ describe("Lab 2 HTTP JSON server", () => {
         expect(result.body).toHaveProperty("error");
     });
 
+    // *** Graduate Extension ***
+    test("POST /echo rejects missing message field", async () => {
+        const result = await postJson("/echo", { notMessage: "hello" });
+
+        expect(result.status).toBe(400);
+        expect(result.body).toHaveProperty("error");
+    });
+
+    // *** Graduate Extension ***
+    test ("POST /echo rejects non-string message field", async () => {
+        const result = await postJson("/echo", { message: 123 }); 
+
+        expect(result.status).toBe(400);
+        expect(result.body).toHaveProperty("error");
+    });
+
+    // *** Graduate Extension ***
+    test("POST /uppercase returns the text in uppercase", async () => {
+        const result = await postJson("/uppercase", { text: "hello" });
+
+        expect(result.status).toBe(200);
+        expect(result.body).toEqual({ result: "HELLO" });
+    });
+
+    // *** Graduate Extension ***
+    test("POST /uppercase rejects missing text field", async () => {
+        const result = await postJson("/uppercase", { notText: "hello" });
+
+        expect(result.status).toBe(400);
+        expect(result.body).toHaveProperty("error");
+    });
+
     test("POST /calculate can add two numbers", async () => {
         const result = await postJson("/calculate", {
             operation: "add",
@@ -159,6 +191,19 @@ describe("Lab 2 HTTP JSON server", () => {
         });
     });
 
+    test("POST /calculate can exponentiate two numbers", async () => {
+        const result = await postJson("/calculate", {
+            operation: "power",
+            a: 2,
+            b: 3
+        });
+
+        expect(result.status).toBe(200);
+        expect(result.body).toEqual({
+            result: 8
+        });
+    });
+
     test("POST /calculate rejects division by zero", async () => {
         const result = await postJson("/calculate", {
             operation: "divide",
@@ -172,7 +217,7 @@ describe("Lab 2 HTTP JSON server", () => {
 
     test("POST /calculate rejects unsupported operations", async () => {
         const result = await postJson("/calculate", {
-            operation: "power",
+            operation: "factorial",
             a: 2,
             b: 3
         });
@@ -202,14 +247,18 @@ describe("Lab 2 HTTP JSON server", () => {
         expect(result.body).toHaveProperty("error");
     });
 
+    // *** Graduate Extension ***
     test("GET /requests returns a request count", async () => {
         await getJson("/health");
         const result = await getJson("/requests");
 
         expect(result.status).toBe(200);
-        expect(result.body).toHaveProperty("count");
-        expect(typeof result.body.count).toBe("number");
-        expect(result.body.count).toBeGreaterThanOrEqual(2);
+        expect(result.body).toHaveProperty("requests");
+        expect(typeof result.body.requests).toBe("object");
+        expect(result.body.requests.getHealth).toBe(1);
+        expect(result.body.requests.getRequests).toBe(1);
+        expect(result.body.requests.postEcho).toBe(0);
+        expect(result.body.requests.total).toBeGreaterThanOrEqual(2);
     });
 });
 
