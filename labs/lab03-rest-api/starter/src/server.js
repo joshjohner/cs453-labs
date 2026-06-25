@@ -107,7 +107,7 @@ export function createApp(){
         } else {
             console.log(`Item with ID: ${id} not found`);
             // The item does not exist, so return a 404 Not Found response
-            res.status(404).json({ error: "Item not found" });
+            res.status(404).json({ error: `Item with id ${id} not found` });
         }
     });
     
@@ -127,6 +127,12 @@ export function createApp(){
             console.log(`Item with ID: ${id} not found`);
             res.status(404).json({ error: "Item not found" });
         }
+    });
+
+    app.post("/reset", (req, res) => {
+        console.log("Resetting state");
+        resetState();
+        res.status(200).json({ message: "State has been reset" });
     });
     
     // This catches requests that did not match any route above.
