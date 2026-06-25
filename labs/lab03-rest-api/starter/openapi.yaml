@@ -1,0 +1,197 @@
+openapi: '3.0.3'
+info:
+  title: Lab 3 - REST API
+  version: '1.0'
+servers:
+  - url: http://localhost:3000
+
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Checks the health of the server
+      responses:
+        "200":
+          description: Server is running
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse' 
+              example:
+                status: "ok"
+
+  /items:
+    get:
+      tags:
+        - Items
+      summary: Get all items
+      description: Retrieves a list of all items
+      responses:
+        "200":
+          description: A list of items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemList'
+              example:
+                - id: 1
+                  name: "Item 1"
+                  quantity: 10
+                - id: 2
+                  name: "Item 2"
+                  quantity: 5
+                - id: 3
+                  name: "Item 3"
+                  quantity: 8
+    post:
+      tags:
+        - Items
+      summary: Create a new item
+      description: Adds a new item to the list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemBase'
+      responses:
+        "201":
+          description: Item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid item data"
+
+
+  /items/{id}:
+    get:
+      tags:
+        - Items
+      summary: Get an item by ID
+      description: Retrieves the details of a specific item by its ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Item details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        "404":
+          description: Item with id {id} not found
+
+    put:
+      tags:
+        - Items
+      summary: Update an existing item
+      description: Updates the details of an existing item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemBase'
+      responses:
+        "200":
+          description: Item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid update data"
+        "404":
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                properties:
+                  error:
+                    type: string
+                    example: "Item with id {id} not found"
+
+    delete:
+      tags:
+        - Items
+      summary: Delete an existing item
+      description: Deletes an existing item by ID
+      responses:
+        "204":
+          description: Item deleted
+        "404":
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                properties:
+                  error:
+                    type: string
+                    example: "Item with id {id} not found"
+  
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "ok"
+      required: 
+        - status
+
+    ItemBase:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Item 1"
+        quantity:
+          type: integer
+          example: 10
+      required:
+        - name
+        - quantity
+
+    Item:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+          required:
+            - id
+        - $ref: '#/components/schemas/ItemBase'
+
+    ItemList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Item'
+      required:
+        - items
+      
+ 
