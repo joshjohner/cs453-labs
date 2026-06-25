@@ -102,6 +102,12 @@ paths:
         - Items
       summary: Update an existing item
       description: Updates the details of an existing item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         required: true
         content:
@@ -139,6 +145,12 @@ paths:
         - Items
       summary: Delete an existing item
       description: Deletes an existing item by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
         "204":
           description: Item deleted
