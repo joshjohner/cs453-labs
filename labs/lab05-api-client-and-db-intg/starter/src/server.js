@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import pg from "pg";
+import { pathToFileURL } from "url";
 
 const { Pool } = pg;
 
@@ -139,9 +140,10 @@ export async function initializeDatabase() {
   }
 }
 
-const isMainModule = process.argv[1] === new URL(import.meta.url).pathname;
+const isMainModule = import.meta.url === pathToFileURL(process.argv[1]).href;
 
 if (isMainModule) {
+  console.log("Starting Lab 5 API...");
   const app = createApp();
 
   initializeDatabase()
@@ -154,4 +156,7 @@ if (isMainModule) {
       console.error("Server startup failed:", error);
       process.exit(1);
     });
+}
+else {
+  console.log("Lab 5 API imported as a module.");
 }
