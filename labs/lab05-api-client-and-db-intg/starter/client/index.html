@@ -9,10 +9,11 @@
   <body>
     <main class="page">
       <section class="panel">
+        
         <h1>Lab 5 Inventory Client</h1>
         <p>
-          This starter client can load items and create a new item. Extend it
-          as you add more API routes.
+            This starter client can load items and create a new item. Extend it
+            as you add more API routes.
         </p>
 
         <div class="actions">
@@ -28,6 +29,13 @@
           <label>
             Quantity
             <input id="item-quantity" name="quantity" type="number" min="0" required>
+          </label>
+
+          <label>
+            Category
+            <select id="item-category" name="category_id" required>
+              
+            </select>
           </label>
 
           <button type="submit">Add Item</button>
@@ -47,9 +55,26 @@
                 Quantity
                 <input id="edit-item-quantity" name="quantity" type="number" min="0" required>
               </label>
+              
+              <label>
+                Category
+                <select id="edit-item-category" name="category_id" required>
+                </select>
+              </label>
+
+
               <p id="edit-status" class="status"></p>
               <button type="submit">Save Changes</button>
             </form>
+
+            <form id = "edit-category-form" class="modal hidden">
+              <label>
+                Category Name
+                <input id="edit-category-name" name="name" type="text" required>
+              </label>
+
+              <p id="edit-category-status" class="status"></p>
+              <button type="submit">Save Category</button>
           </div>
         </div>
 

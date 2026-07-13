@@ -28,30 +28,33 @@ export function validatePartialItem(req, res, next) {
     console.log("Validating partial item with body", req.body);
     const name = req.body?.name;
     const quantityRaw = req.body?.quantity;
-
+    const categoryIdRaw = req.body?.category_id;
 
     const noNameProvided = name === undefined;
     const noQuantityProvided = quantityRaw === undefined;
+    const noCategoryProvided = categoryIdRaw === undefined;
 
-    if (noNameProvided && noQuantityProvided) { 
+    if (noNameProvided && noQuantityProvided && noCategoryProvided) { 
         return res.status(400).json({
             error: "Bad Request",
-            message: "Must provide either a name or a quantity."
+            message: "Must provide either a name, a quantity, or a category."
         });   
     }
 
     const nameIsBad = name !== undefined && !name;
     const quantityIsBad = quantityRaw !== undefined && (isNaN(Number(quantityRaw)) || Number(quantityRaw) < 0);
+    const categoryIsBad = categoryIdRaw !== undefined && (isNaN(Number(categoryIdRaw)) || Number(categoryIdRaw) <= 0);
 
-    if (nameIsBad || quantityIsBad) {
+    if (nameIsBad || quantityIsBad || categoryIsBad) {
         return res.status(400).json({
             error: "Bad Request",
-            message: "Name cannot be empty and quantity must be a non-negative integer."
+            message: "Name cannot be empty, quantity must be a non-negative integer, and category must be a positive integer."
         });   
     }
 
     req.name = name !== undefined ? name : req.item?.name;
     req.quantity = quantityRaw !== undefined ? Number(quantityRaw) : req.item?.quantity;
+    req.category_id = categoryIdRaw !== undefined ? Number(categoryIdRaw) : req.item?.category_id;
     next();
 }
 
@@ -66,7 +69,7 @@ export function verifyItemExists(pool) {
         try {
                 const result = await pool.query(
                 `
-                SELECT id, name, quantity
+                SELECT id, name, quantity, category_id
                 FROM items
                 WHERE id = $1
                 `,

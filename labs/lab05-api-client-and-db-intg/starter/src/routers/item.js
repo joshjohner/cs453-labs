@@ -6,13 +6,28 @@ export function createItemRouter(pool) {
 
     // Starter route: return every item from the database.
     router.get("/api/items", async (req, res) => {
-        try {
-            const result = await pool.query(`
-                SELECT id, name, quantity
-                FROM items
-                ORDER BY id ASC
-            `);
+        const {category_id} = req.query;
 
+        try {
+            let result;
+            if (category_id !== undefined) {
+                result = await pool.query( `
+                    SELECT items.id, items.name, items.quantity, c.id AS category_id, c.name AS category_name
+                    FROM items
+                    JOIN categories c ON items.category_id = c.id
+                    WHERE c.id = $1
+                    ORDER BY items.id ASC
+                    `   
+                , [category_id]);
+                
+            } else {
+                result = await pool.query(`
+                    SELECT items.id, items.name, items.quantity, c.id AS category_id, c.name AS category_name
+                    FROM items
+                    JOIN categories c ON items.category_id = c.id
+                    ORDER BY items.id ASC
+                `);
+            }
             res.status(200).json({ items: result.rows });
         } catch (error) {
             console.error("Failed to load items:", error);
@@ -25,16 +40,16 @@ export function createItemRouter(pool) {
 
     // Starter route: create one item so the client can demonstrate a write.
     router.post("/api/items", validateItem, async (req, res) => {
-        const { name, quantity } = req.body;
+        const { name, quantity, category_id } = req.body;
 
         try {
             const result = await pool.query(
                 `
-                INSERT INTO items (name, quantity)
-                VALUES ($1, $2)
-                RETURNING id, name, quantity
+                INSERT INTO items (name, quantity, category_id)
+                VALUES ($1, $2, $3)
+                RETURNING id, name, quantity, category_id
                 `,
-                [name, quantity]
+                [name, quantity, category_id]
             );
 
             res.status(201).json({ item: result.rows[0] });
@@ -55,18 +70,19 @@ export function createItemRouter(pool) {
     // TODO: Replace one item by ID.
     router.put("/api/items/:id", validateId, validateItem, verifyItemExists(pool), async (req, res) => {
         console.log("PUT /api/items/:id called with", { body: req.body, id: req.id});
-        const {id, name, quantity} = req;
+        const {id, name, quantity, category_id} = req;
 
         try {
             const result = await pool.query(
                 `
                 UPDATE items
                 SET name = $1,
-                    quantity = $2
-                WHERE id = $3
-                RETURNING id, name, quantity
+                    quantity = $2,
+                    category_id = $3
+                WHERE id = $4
+                RETURNING id, name, quantity, category_id
                 `,
-                [name, quantity, id]
+                [name, quantity, category_id, id]
             );
 
             res.status(200).json({ item: result.rows[0] });
@@ -83,18 +99,19 @@ export function createItemRouter(pool) {
     router.patch("/api/items/:id", validateId, validatePartialItem, verifyItemExists(pool), async (req, res) => {
         console.log("PATCH /api/items/:id called with", { body: req.body, id: req.id});
         
-        const {name, quantity, item} = req;
-        const updatedItem = { ...item, name: name ?? item.name, quantity: quantity ?? item.quantity };
+        const {name, quantity, category_id, item} = req;
+        const updatedItem = { ...item, name: name ?? item.name, quantity: quantity ?? item.quantity, category_id: category_id ?? item.category_id };
         try {
             const result = await pool.query(
                 `
                 UPDATE items
                 SET name = $1,
-                    quantity = $2
-                WHERE id = $3
-                RETURNING id, name, quantity
+                    quantity = $2,
+                    category_id = $3
+                WHERE id = $4
+                RETURNING id, name, quantity, category_id
                 `,
-                [updatedItem.name, updatedItem.quantity, updatedItem.id]
+                [updatedItem.name, updatedItem.quantity, updatedItem.category_id, updatedItem.id]
             );
             res.status(200).json({ item: result.rows[0] });
         } catch (error) {

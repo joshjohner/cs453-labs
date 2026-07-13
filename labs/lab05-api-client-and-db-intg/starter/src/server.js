@@ -3,6 +3,7 @@ import cors from "cors";
 import pg from "pg";
 import { pathToFileURL } from "url";
 import { createItemRouter } from "./routers/item.js";
+import { createCategoryRouter } from "./routers/categories.js";
 
 const { Pool } = pg;
 
@@ -41,30 +42,48 @@ export function createApp() {
       }
     });
 
-    const router = createItemRouter(pool);
-    app.use(router);
+    const itemRouter = createItemRouter(pool);
+    const categoryRouter = createCategoryRouter(pool);
+    app.use(itemRouter);
+    app.use(categoryRouter);
 
     return app;
 }
 
 export async function initializeDatabase() {
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS items (
+      CREATE TABLE IF NOT EXISTS categories (
         id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        quantity INTEGER NOT NULL CHECK (quantity >= 0)
+        name TEXT NOT NULL UNIQUE
       )
     `);
 
-    const { rows } = await pool.query("SELECT COUNT(*)::int AS count FROM items");
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS items (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        quantity INTEGER NOT NULL CHECK (quantity >= 0),
+        category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL
+      )
+    `);
 
-    if (rows[0].count === 0) {
+    const { rows: categoryRows } = await pool.query("SELECT COUNT(*)::int AS count FROM categories");
+
+    if (categoryRows[0].count === 0) {
+      await pool.query(`
+        INSERT INTO categories (name)
+        VALUES ($1), ($2), ($3)
+      `, ["IT", "Furniture", "Morale"]);
+    }
+    const { rows: itemRows } = await pool.query("SELECT COUNT(*)::int AS count FROM items");
+
+    if (itemRows[0].count === 0) {
       await pool.query(
         `
-          INSERT INTO items (name, quantity)
-          VALUES ($1, $2), ($3, $4), ($5, $6)
+          INSERT INTO items (name, quantity, category_id)
+          VALUES ($1, $2, $3), ($4, $5, $6), ($7, $8, $9)
         `,
-        ["Keyboard", 10, "Mouse", 5, "Monitor", 3]
+        ["Keyboard", 10, 1, "Mouse", 5, 1, "Monitor", 3, 1]
       );
     }
 }
@@ -78,7 +97,7 @@ console.log(`import.meta.url: ${import.meta.url}`);
 if (isMainModule) {
     console.log("Starting Lab 5 API...");
     const app = createApp();
-
+    console.log("Initializing database...");
     initializeDatabase()
       .then(() => {
         app.listen(PORT, () => {

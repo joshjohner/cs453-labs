@@ -2,17 +2,22 @@ const API_BASE_URL = "http://localhost:3000";
 
 const loadButton = document.querySelector("#load-items");
 const itemList = document.querySelector("#items");
-const form = document.querySelector("#add-item-form");
+const addItemForm = document.querySelector("#add-item-form");
 const itemNameInput = document.querySelector("#item-name");
 const itemQuantityInput = document.querySelector("#item-quantity");
+const itemCategoryInput = document.querySelector("#item-category");
 const statusBox = document.querySelector("#status");
 const editModal = document.querySelector("#edit-modal");
 const closeModalButton = document.querySelector("#close-modal");
 const editItemForm = document.querySelector("#edit-item-form");
 const editNameBox = document.querySelector("#edit-item-name");
 const editQuantityBox = document.querySelector("#edit-item-quantity");
+const editCategoryBox = document.querySelector("#edit-item-category");
 
 
+window.addEventListener("DOMContentLoaded", () => {
+  loadCategories(itemCategoryInput);
+});
 
 
 function setStatus(message) {
@@ -31,13 +36,13 @@ function renderItems(items) {
 function renderItem(item) {
 
   const li = document.createElement("li");
-  li.textContent = `${item.id}: ${item.name} (${item.quantity})`;
+  li.textContent = `  ${item.id}: [ ${item.category_name} ] ${item.name} (${item.quantity})`;
   
   // --- Edit Button ---
   const editButton = document.createElement("button");
   editButton.textContent = "Edit";
-  editButton.addEventListener("click", () => {
-    openEditModal(item);
+  editButton.addEventListener("click", async () => {
+    await openEditModal(item);
   });
 
   // --- Delete Button ---
@@ -91,7 +96,7 @@ async function loadItems() {
   }
 }
 
-async function addItem(name, quantity) {
+async function addItem(name, quantity, category_id) {
   setStatus("Adding item...");
 
   try {
@@ -100,7 +105,7 @@ async function addItem(name, quantity) {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ name, quantity })
+      body: JSON.stringify({ name, quantity, category_id })
     });
 
     const data = await response.json();
@@ -116,35 +121,63 @@ async function addItem(name, quantity) {
   }
 }
 
-loadButton.addEventListener("click", loadItems);
 
-form.addEventListener("submit", async (event) => {
+addItemForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-
+  
   const name = itemNameInput.value.trim();
   const quantity = Number(itemQuantityInput.value);
-
-  if (!name || !Number.isInteger(quantity) || quantity < 0) {
-    setStatus("Enter a name and a non-negative integer quantity.");
+  const category_id = Number(itemCategoryInput.value);
+  
+  if (!name || !Number.isInteger(quantity) || quantity < 0 || isNaN(category_id)) {
+    setStatus("Enter a name, a non-negative integer quantity, and a valid category.");
     return;
   }
-
+  
   itemNameInput.value = "";
   itemQuantityInput.value = "0";
-  await addItem(name, quantity);
+  itemCategoryInput.value = "";
+  await addItem(name, quantity, category_id);
 });
 
-function openEditModal(item) {
+async function openEditModal(item) {
 
   editNameBox.value = item.name;
   editQuantityBox.value = item.quantity;
-
+  editCategoryBox.value = item.category_id;
   editModal.dataset.nameIsChanged = "false";
   editModal.dataset.quantityIsChanged = "false";
+  editModal.dataset.categoryIsChanged = "false";
   editModal.dataset.item = JSON.stringify(item);
+  await loadCategories(editCategoryBox);
+  editCategoryBox.value = item.category_id;
   editModal.classList.remove("hidden");
 }
 
+async function loadCategories(categoryBox) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/categories`);
+    if (!response.ok) {
+      throw new Error(`Failed to load categories with status ${response.status}`);
+    }
+    const data = await response.json();
+    categoryBox.replaceChildren();
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "-- Select a category --";
+    categoryBox.appendChild(defaultOption);
+    for (const category of data.categories) {
+      const option = document.createElement("option");
+      option.value = category.id;
+      option.textContent = category.name;
+      categoryBox.appendChild(option);
+    }
+  } catch (error) {
+    console.error("Failed to load categories:", error);
+  }
+}
+
+loadButton.addEventListener("click", loadItems);
 
 editItemForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -158,8 +191,9 @@ editItemForm.addEventListener("submit", async (event) => {
 
   const nameIsChanged = editModal.dataset.nameIsChanged === "true";
   const quantityIsChanged = editModal.dataset.quantityIsChanged === "true";
+  const categoryIsChanged = editModal.dataset.categoryIsChanged === "true";
 
-  if (!nameIsChanged && !quantityIsChanged) {
+  if (!nameIsChanged && !quantityIsChanged && !categoryIsChanged) {
     statusBox.textContent = "No changes to save.";
     return;
   }
@@ -184,7 +218,17 @@ editItemForm.addEventListener("submit", async (event) => {
     }
   }
 
-  if (nameIsChanged && quantityIsChanged) {
+  if (categoryIsChanged) {
+    console.log("Category changed to", editCategoryBox.value);
+    updatedItem.category_id = Number(editCategoryBox.value);
+    if (isNaN(updatedItem.category_id)) {
+      statusBox.textContent = "Please select a valid category.";
+      editCategoryBox.value = originalItem.category_id;
+      return;
+    }
+  }
+
+  if (nameIsChanged && quantityIsChanged && categoryIsChanged) {
     statusBox.textContent = "Saving changes...";
 
     try {
@@ -194,7 +238,7 @@ editItemForm.addEventListener("submit", async (event) => {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ name: updatedItem.name, quantity: updatedItem.quantity })
+        body: JSON.stringify({ name: updatedItem.name, quantity: updatedItem.quantity, category_id: updatedItem.category_id })
       });
 
       const data = await response.json();
@@ -210,8 +254,8 @@ editItemForm.addEventListener("submit", async (event) => {
     }
 
   } else {
-    statusBox.textContent = nameIsChanged ? "Saving name change..." : "Saving quantity change...";
-    console.log("Saving partial update with", nameIsChanged ? { name: updatedItem.name } : { quantity: updatedItem.quantity });
+    statusBox.textContent = nameIsChanged ? "Saving name change..." : quantityIsChanged ? "Saving quantity change..." : "Saving category change...";
+    console.log("Saving partial update with", nameIsChanged ? { name: updatedItem.name } : quantityIsChanged ? { quantity: updatedItem.quantity } : { category_id: updatedItem.category_id });
     try {
       const url = `${API_BASE_URL}/api/items/${itemId}`;
       const response = await fetch(url, {
@@ -220,7 +264,7 @@ editItemForm.addEventListener("submit", async (event) => {
           "Content-Type": "application/json"
         },
 
-        body: JSON.stringify(nameIsChanged ? { name: updatedItem.name } : { quantity: updatedItem.quantity })
+        body: JSON.stringify(nameIsChanged ? { name: updatedItem.name } : quantityIsChanged ? { quantity: updatedItem.quantity } : { category_id: updatedItem.category_id })
       });
 
       const data = await response.json();
@@ -249,6 +293,12 @@ editQuantityBox.addEventListener("input", () => {
   editModal.dataset.quantityIsChanged = "true";
 });
 
+editCategoryBox.addEventListener("change", () => {
+  console.log("Category select changed");
+  editModal.dataset.categoryIsChanged = "true";
+});
+
 closeModalButton.addEventListener("click", () => {
   editModal.classList.add("hidden");
 });
+
