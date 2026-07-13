@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import pg from "pg";
 import { pathToFileURL } from "url";
-import { createRouter } from "./router.js";
+import { createItemRouter } from "./routers/item.js";
 
 const { Pool } = pg;
 
@@ -41,7 +41,7 @@ export function createApp() {
       }
     });
 
-    const router = createRouter(pool);
+    const router = createItemRouter(pool);
     app.use(router);
 
     return app;

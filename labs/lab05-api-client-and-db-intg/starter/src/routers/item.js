@@ -1,7 +1,7 @@
 import express from "express";
-import { validateId, validateItem, validatePartialItem, verifyItemExists } from "./validation.js";
+import { validateId, validateItem, validatePartialItem, verifyItemExists } from "../validation/item.js";
 
-export function createRouter(pool) {
+export function createItemRouter(pool) {
     const router = express.Router();
 
     // Starter route: return every item from the database.
@@ -54,6 +54,7 @@ export function createRouter(pool) {
 
     // TODO: Replace one item by ID.
     router.put("/api/items/:id", validateId, validateItem, verifyItemExists(pool), async (req, res) => {
+        console.log("PUT /api/items/:id called with", { body: req.body, id: req.id});
         const {id, name, quantity} = req;
 
         try {
@@ -80,8 +81,10 @@ export function createRouter(pool) {
 
     // TODO: Partially update one item by ID.
     router.patch("/api/items/:id", validateId, validatePartialItem, verifyItemExists(pool), async (req, res) => {
+        console.log("PATCH /api/items/:id called with", { body: req.body, id: req.id});
+        
         const {name, quantity, item} = req;
-        item  = { ...item, name: name ?? item.name, quantity: quantity ?? item.quantity };
+        const updatedItem = { ...item, name: name ?? item.name, quantity: quantity ?? item.quantity };
         try {
             const result = await pool.query(
                 `
@@ -91,7 +94,7 @@ export function createRouter(pool) {
                 WHERE id = $3
                 RETURNING id, name, quantity
                 `,
-                [item.name, item.quantity, item.id]
+                [updatedItem.name, updatedItem.quantity, updatedItem.id]
             );
             res.status(200).json({ item: result.rows[0] });
         } catch (error) {

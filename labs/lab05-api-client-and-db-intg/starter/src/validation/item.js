@@ -6,6 +6,7 @@ export function validateId(req, res, next) {
             message: "ID must be a positive integer."
         });
     }
+    req.id = id;
     next();
 }
 
@@ -24,16 +25,33 @@ export function validateItem(req, res, next) {
 }
 
 export function validatePartialItem(req, res, next) {
+    console.log("Validating partial item with body", req.body);
     const name = req.body?.name;
-    const quantity = Number(req.body?.quantity);    
-    if ((name !== undefined && !name) || (quantity !== undefined && (isNaN(quantity) || quantity < 0))) {
+    const quantityRaw = req.body?.quantity;
+
+
+    const noNameProvided = name === undefined;
+    const noQuantityProvided = quantityRaw === undefined;
+
+    if (noNameProvided && noQuantityProvided) { 
         return res.status(400).json({
             error: "Bad Request",
             message: "Must provide either a name or a quantity."
         });   
     }
-    req.name = name;
-    req.quantity = quantity;
+
+    const nameIsBad = name !== undefined && !name;
+    const quantityIsBad = quantityRaw !== undefined && (isNaN(Number(quantityRaw)) || Number(quantityRaw) < 0);
+
+    if (nameIsBad || quantityIsBad) {
+        return res.status(400).json({
+            error: "Bad Request",
+            message: "Name cannot be empty and quantity must be a non-negative integer."
+        });   
+    }
+
+    req.name = name !== undefined ? name : req.item?.name;
+    req.quantity = quantityRaw !== undefined ? Number(quantityRaw) : req.item?.quantity;
     next();
 }
 

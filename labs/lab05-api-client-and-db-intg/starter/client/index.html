@@ -33,6 +33,26 @@
           <button type="submit">Add Item</button>
         </form>
 
+        <div id="edit-modal" class="modal hidden">
+          <div class="modal-content">
+            <span id="close-modal" class="close">&times;</span>
+            <h2>Edit Item</h2>
+            <form id="edit-item-form">
+              <label>
+                Name
+                <input id="edit-item-name" name="name" type="text" required>
+              </label>
+
+              <label>
+                Quantity
+                <input id="edit-item-quantity" name="quantity" type="number" min="0" required>
+              </label>
+              <p id="edit-status" class="status"></p>
+              <button type="submit">Save Changes</button>
+            </form>
+          </div>
+        </div>
+
         <p id="status" class="status">Ready.</p>
 
         <ul id="items" class="items"></ul>
